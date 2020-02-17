@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>data parser</title>
+  <link rel="stylesheet" href="assets/pure-1.0.1/pure.css">
+  <script src="assets/jquery-3.4.1.js"></script>
+</head>
+
+<body>
+  <div style="width: max-content; margin: auto;">
+    <div style="width: max-content; margin: auto;margin-top: 3em;">
+      <label for="file">Choose csv file to parse</label>
+      <input type="file" id="file" name="file" accept=".csv" onchange="readFile(this)">
+    </div>
+    <div style="width: max-content; margin: auto;margin-top: 3em;">
+      <a id="downloadAnchorElem" class="pure-button pure-button-disabled">download</a>
+      <a id="copyTextarea" class="pure-button pure-button-disabled" onclick="copyToClipboard('#dataTextarea')">copy result</a>
+    </div>
+    <textarea id="dataTextarea" style="width: 100%; height: 300px;margin-top: 3em;"></textarea>
+  </div>
+
+  <script>
+    var result = {};
+    function release(data) {
+      result = {};
+      // Remove header of csv
+      // TODO: give correct names in csv-src according to JSON keys
+      data.splice(0, 1);
+
+      data.forEach(element => {
+        result[element[2]] = {
+          "name": element[1],
+          // remove spaces from price
+          "cost": parseInt(element[3].replace(/\s/g, ''), 10),
+          "url": element[5]
+        }
+      });
+
+      result = JSON.stringify(result).replace(/\\n/g, '');
+
+      $('#dataTextarea').text(result);
+      $('#copyTextarea').show();
+
+      updateDownloadLink(result);
+      
+      $('.pure-button-disabled').removeClass('pure-button-disabled')
+    }
+
+    function copyToClipboard(element) {
+      var temp = $("<input>");
+      $("body").append(temp);
+      temp.val($(element).text()).select();
+      document.execCommand("copy");
+      temp.remove();
+    }
+
+    function updateDownloadLink(data) {
+      var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(data);
+      var dlAnchorElem = document.getElementById('downloadAnchorElem');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", "data.json");
+      dlAnchorElem.style.display = 'inline';
+    }
+
+    function readFile(input) {
+      let file = input.files[0];
+      let reader = new FileReader();
+
+      reader.readAsText(file);
+
+      reader.onload = () => { release(CSVToArray(reader.result)); };
+      reader.onerror = ()=>{ console.log(reader.error); };
+    };
+
+    function CSVToArray(strData, strDelimiter) {
+      strDelimiter = (strDelimiter || ",");
+
+      var objPattern = new RegExp(
+        (
+          "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+          // Quoted fields.
+          "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+          // Standard fields.
+          "([^\"\\" + strDelimiter + "\\r\\n]*))"
+        ),
+        "gi"
+      );
+      var arrData = [[]];
+      var arrMatches = null;
+      while (arrMatches = objPattern.exec(strData)) {
+        var strMatchedDelimiter = arrMatches[1];
+        if (strMatchedDelimiter.length &&
+          (strMatchedDelimiter != strDelimiter))
+          arrData.push([]);
+
+        if (arrMatches[2])
+          var strMatchedValue = arrMatches[2].replace(
+            new RegExp("\"\"", "g"),
+            "\""
+          );
+        else
+          var strMatchedValue = arrMatches[3];
+
+        arrData[arrData.length - 1].push(strMatchedValue);
+      }
+
+      return (arrData);
+    }
+
+    function readTextFile(file) {
+      fetch(file)
+        .then(response => response.text())
+        .then(data => release(CSVToArray(data)))
+    }
+    $(()=>{
+      readTextFile('./assets/data.csv')
+    })
+  </script>
+</body>
+
+</html>

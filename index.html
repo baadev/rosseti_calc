@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rosseti</title>
+
+  <link rel="stylesheet" href="assets/pure-1.0.1/pure.css">
+</head>
+
+<body>
+  <style>
+    * { color: #222; }
+    #app {max-width: 900px; margin: auto;}
+
+    .step { display: none; }
+    .step_active { display: unset; }
+
+    .forms {
+    width: 30%;
+    margin: 50% auto;
+    display: grid;
+    /*! height: 100%; *//*! align-self: center; *//*! margin: ; */
+    }
+
+
+    .order_settings { text-align: right; }
+
+    .data__input__checkbox {text-align: center; width: 100%;scale: 1.4;}
+    .data__input { max-width: 50px; text-align: center; }
+    .data__select { text-align: center; }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance:textfield; }
+
+    #order_data { margin: 0 1em; }
+    .pure-menu-children > li > a { text-align: left; }
+    #order_data .pure-menu-link { text-align: center; } 
+    /* #order_details__ol { margin-top: 0px; padding-left: 40px; padding-top: 1em;  } */
+    #order_details { display: none; }
+    #order_details ol { list-style-type: none; counter-reset: li; text-align: center; margin-top: 0px; padding-left: 40px; padding-top: 1em; }
+    #order_details li { text-align: left; }
+    #order_details li:before { counter-increment: li; color: red; margin-right: 0.5em; font-size: 0.9em;}
+    #order_details > .order_settings { max-width: 700px; margin: auto; }
+    #order_details table { display: inline-table; margin: auto; width: 100%; }
+    .order_details__price__p {  font-style: italic; width: inherit; font-size: 0.9em; }
+    .order__textarea { height: 350px;}
+
+    #orders { display: grid; }
+
+    .data__select,
+    .order_settings,
+    .order__textarea,
+    #order_details > .order_settings,
+    #order_data .pure-button { width: 100%; }
+
+    hr { color: #ccc; margin: 1em 0; width: 100%;  }
+
+    h1 { color: #b48608; font-family: 'Droid serif', serif; font-size: 36px; font-weight: 400; font-style: italic; line-height: 44px; margin: 0 0 12px; text-align: center; }
+    p { color: #15171B; font-family: 'Droid Sans', sans-serif; font-size: 15px; font-weight: 400; line-height: 24px; margin: 0 0 14px; }
+    a { color: #b48608; text-decoration: none; border-bottom: 1px solid #4c3a07; }
+    .date { border-top: 1px solid #fff; position: relative; top: 20px; margin-bottom: 30px; }
+    .date span { color: #000; text-decoration: none; font-style: italic; font-size: 13px; text-align: center; padding: 2px 5px; background: #fff; width: 120px; margin: 0 auto; display: block; position: relative; top: -10px; font-family: "Droid serif", serif; }
+    a.btn { font-family: 'Droid serif', serif; background: #b48608; padding: 4px 7px; color: #000; text-decoration: none; margin: 0 auto; width: 100%; width: 120px; margin: 0 auto; display: block; text-align: center; font-style: italic; }
+    a.btn:hover { color: #000; background: #fff; }
+    .left { float: left; margin: 0 5% 30px 0; width: 30%; }
+    .right { float: right; margin: 0 0 30px 0; width: 30%; }
+  </style>
+
+  
+  <div id="app">
+    <form id="authform" class="forms step step_active" name="auth" onsubmit="updateOperatorData(); return false;">
+      <select id="login__select" name="login"></select>
+      <button type="submit">Войти</button>
+    </form>
+
+    <form id="customerform" class="forms step" name="customer" onsubmit="updateCustomerData(); return false;">
+      <input type="text" name="name" inputmode="latin-name" placeholder="ФИО заказчика" required>
+      <input type="tel" name="tel" class="tel" inputmode="tel" placeholder="Телефон заказчика" required>
+      <button type="submit">Войти</button>
+    </form>
+
+    <div id="data" class="step">
+      <hr>
+      <div id="order_data" class="pure-g">
+        <div class="pure-u-8-24">
+          <p>Оператор:<br><span id="order_data__id">baa@z-wave.me</span></p>
+        </div>
+        <div class="pure-u-10-24">
+          <p>Клиент:
+            <br><span id="order_data__cname">Альберт Николаевич</span>
+            <br><span id="order_data__ctel">+7(916)291-08-11</span>
+          </p>
+        </div>
+        <div class="pure-u-6-24 pure-menu pure-menu-vertical">
+          <ul class="pure-menu-list">
+            <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+              <a class="pure-menu-link">Меню</a>
+              <ul class="pure-menu-children">
+                <li class="pure-menu-item"><a onclick="saveOrder()" class="pure-button">Сохранить</a></li>
+                <li class="pure-menu-item"><a onclick="resetData()" class="pure-button">Отчистить таблицу</a></li>
+                <li class="pure-menu-item"><a onclick="exit()" class="pure-button">Выход</a></li>
+                <li class="pure-menu-item"><a href="parser.html" target="_blank" class="pure-button">Парсер</a></li>
+              </ul>
+            </li>
+          </ul>
+          <ul class="pure-menu-list">
+            <li class="pure-menu-item"><a onclick="saveOrder()" class="pure-button">новый расчет</a></li>
+          </ul>
+        </div>
+
+      </div>
+      <hr>
+      
+      <table id="order_table" class="pure-table pure-table-bordered">
+        <tbody></tbody>
+      </table>
+      <hr>
+      <div id="order_details" class="pure-g">
+        <div class="pure-u-1-2">
+          <!-- <table>
+            <tr>
+              
+            </tr>
+          </table> -->
+          <ol id="order_details__ol" class="pure-table"></ol>
+        </div>
+        <div class="pure-u-1-2">
+          <table class="pure-table pure-table-horizontal right">
+            <thead>
+              <tr>
+                <th>Оборудование</th>
+                <th>Доставка</th>
+                <th>Установка</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="final_device_price"></span></td>
+                <td><span class="delivery_price"></span></td>
+                <td><span class="installation_price"></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="pure-g">
+      <div id="orders"></div>
+    </div>
+  </div>  
+  
+  <script src="assets/jquery-3.4.1.js"></script>
+  <script src="assets/jquery.maskedinput.js"></script>
+
+  <script src="assets/main.js"></script>
+</body>
+</html>
